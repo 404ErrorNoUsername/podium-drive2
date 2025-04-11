@@ -54,8 +54,8 @@ void JoystickEvents::PrintValues()
   Serial.println("  ");
  // Serial.print("\t Hat = ");
  // Serial.print(m_Hat_Val);
- // Serial.print("\t Twist = ");
-  //Serial.print(m_Twist_Val);
+  Serial.print(" Twist = ");
+  Serial.print(m_Twist_Val);
   //Serial.print("\t Slider = ");
  // Serial.print(m_Slider_Val);
   //Serial.print("\t Button = ");
@@ -70,5 +70,6 @@ void JoystickEvents::GetValues (int &Xval, int &Yval, int &Hval, int &Tval, int 
   Tval = m_Twist_Val;
   Sval = m_Slider_Val;
   JBval = m_Joy_Button;
-}
 
+  
+}
