@@ -1,6 +1,3 @@
-/* 
- *  Simplified Logitech Extreme 3D Pro Joystick Report Parser, ready to go.
-*/
 #include <Servo.h>
 #include <usbhid.h>
 #include <hiduniversal.h>
@@ -67,28 +64,36 @@ void setup()
     Serial.print(" | Twist: "); Serial.print(Twist);
     Serial.print(" | Button: "); Serial.println(Button);
 
-    // Ensure valid joystick input before moving motors
+    // DO NOT DELETE: Ensure valid joystick input before moving motors 
     if (Yval == 0 && Twist == 0 && Button == 0) {
         Serial.println("No valid joystick input detected, keeping motors at neutral.");
         leftMotor.writeMicroseconds(1500);
         rightMotor.writeMicroseconds(1500);
         return;  // Skip further processing
     }
-    //int percent = map(Slider, 0,255,25,75)/100;
-    // Map joystick Y-axis to forward/backward motion (1000-2000 µs)
-    int forwardSpeed = map(Yval, 0, 1023, 1400, 1600);
-
-    // Map twist for zero-point turn (-255 to 255 → -500 to 500 µs)
-    int turnAmount = map(Twist, 0, 255, 500, -500);
+    
+    //declare constants for drive, twist and deadband.
+    const int driveMin = 0, driveMax = 1023, driveNeutral = 508;
+    const int twistMin = 0, twistMax = 255, twistNeutral = 127;
+    const int deadband = 25;
 
     //percentage
-    
-    
-    // Calculate motor signals for zero-point turns
-    int leftPWM = constrain(forwardSpeed - turnAmount, 1400, 1600);
-    int rightPWM = constrain(forwardSpeed + turnAmount, 1400, 1600);
+    float speedFactor = map(Slider, 0,255,25,100)/100.0;
 
+    // Map joystick Y-axis to forward/backward motion (1000-2000 µs) and applies slider speed limit
+    int forwardSpeed = constrain(map(Yval, driveMin, driveMax, 1000, 2000), 1000, 2000);
+    forwardSpeed = 1500 + (forwardSpeed - 1500) * speedFactor;
+
+    // Map twist for zero-point turn (-255 to 255 → -500 to 500 µs)
+    int turnAmount = constrain(map(Twist, twistMin, twistMax, 250, -250),-500,500)*sqrt(speedFactor);
     
+    // blends twist and y axis for smooth driving.
+    int leftPWM = constrain(forwardSpeed - turnAmount, 1000, 2000);
+    int rightPWM = constrain(forwardSpeed + turnAmount, 1000, 2000);
+
+   //applies deadband so joystick doesnt wig out when no input is given.
+    if (abs(Yval - driveNeutral) < deadband) Yval = driveNeutral;
+    if (abs(Twist - twistNeutral) < deadband) Twist = twistNeutral; 
 
     // Send PWM to motors
     leftMotor.writeMicroseconds(leftPWM);
@@ -101,6 +106,5 @@ void setup()
     
     delay(20); // Short delay to prevent excessive updates
 }
-
 
 
